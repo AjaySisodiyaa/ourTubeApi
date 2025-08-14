@@ -7,6 +7,8 @@ const commentRoute = require("./routes/comment.js");
 
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
+const cors = require("cors");
+app.use(cors());
 
 const connectWithDatabase = async () => {
   try {
