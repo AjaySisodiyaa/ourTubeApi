@@ -4,12 +4,98 @@ const checkAuth = require("../middleware/checkAuth");
 const jwt = require("jsonwebtoken");
 const cloudinary = require("cloudinary").v2;
 const Video = require("../models/Video");
+const User = require("../models/User");
 const mongoose = require("mongoose");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+//get own video ------------------------------
+Router.get("/own-video", checkAuth, async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const user = await jwt.verify(token, process.env.SECRET_KEY);
+    const videos = await Video.find({ user_id: user._id }).populate(
+      "user_id",
+      "channelName logoUrl"
+    );
+    res.status(200).json({ videos });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error fetching video" });
+  }
+});
+
+//get video by category ------------------------------
+Router.get("/category/:category", async (req, res) => {
+  try {
+    const videos = await Video.find({ category: req.params.category });
+    res.status(200).json({ videos });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error fetching video" });
+  }
+});
+//get video of Subscribed channel ------------------------------
+Router.get("/subscribed/video", checkAuth, async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const verifiedUser = await jwt.verify(token, process.env.SECRET_KEY);
+    const currentUser = await User.findById(verifiedUser._id);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const subscribedVideo = await Video.find({
+      user_id: {
+        $in: currentUser.subscribedChannels,
+      },
+    });
+
+    res.status(200).json(subscribedVideo);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error fetching video" });
+  }
+});
+
+// Get subscribed channels
+Router.get("/subscribed/channel", checkAuth, async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const verifiedUser = jwt.verify(token, process.env.SECRET_KEY);
+
+    const currentUser = await User.findById(verifiedUser._id);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const subscribedChannels = await User.find({
+      _id: { $in: currentUser.subscribedChannels },
+    });
+
+    res.status(200).json(subscribedChannels);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching subscribed channels" });
+  }
+});
+
+//get Channel videos ------------------------------
+Router.get("/channel/:channelId", async (req, res) => {
+  try {
+    const videos = await Video.find({ user_id: req.params.channelId }).populate(
+      "user_id",
+      "channelName logoUrl subscribers "
+    );
+    res.status(200).json({ videos });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error fetching video" });
+  }
 });
 
 //Upload new video ------------------------------
