@@ -14,7 +14,7 @@ cloudinary.config({
 });
 
 //get video by Id ------------------------------
-Router.get("/:videoId", async (req, res) => {
+Router.get("/video/:videoId", async (req, res) => {
   try {
     const video = await Video.findById({ _id: req.params.videoId }).populate(
       "user_id",
