@@ -46,7 +46,10 @@ Router.get("/own-video", checkAuth, async (req, res) => {
 //get video by category ------------------------------
 Router.get("/category/:category", async (req, res) => {
   try {
-    const videos = await Video.find({ category: req.params.category });
+    const videos = await Video.find({ category: req.params.category }).populate(
+      "user_id",
+      "channelName logoUrl"
+    );
     res.status(200).json({ videos });
   } catch (error) {
     console.log(error);
