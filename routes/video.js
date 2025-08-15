@@ -13,6 +13,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+//get video by Id ------------------------------
+Router.get("/:videoId", async (req, res) => {
+  try {
+    const video = await Video.findById({ _id: req.params.videoId }).populate(
+      "user_id",
+      "channelName logoUrl subscribers"
+    );
+    res.status(200).json({ video });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error fetching video" });
+  }
+});
+
 //get own video ------------------------------
 Router.get("/own-video", checkAuth, async (req, res) => {
   try {
