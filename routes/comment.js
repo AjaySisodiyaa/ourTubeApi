@@ -5,6 +5,7 @@ const checkAuth = require("../middleware/checkAuth");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
+//create a new comment ----------------
 Router.post("/new-comment/:videoId", checkAuth, async (req, res) => {
   try {
     const verifiedUser = jwt.verify(
