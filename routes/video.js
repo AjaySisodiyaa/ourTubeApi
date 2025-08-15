@@ -98,17 +98,29 @@ Router.get("/subscribed/channel", checkAuth, async (req, res) => {
   }
 });
 
-//get Channel videos ------------------------------
+// Get Channel videos
 Router.get("/channel/:channelId", async (req, res) => {
   try {
-    const videos = await Video.find({ user_id: req.params.channelId }).populate(
-      "user_id",
-      "channelName logoUrl subscribers "
-    );
+    const { channelId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(channelId)) {
+      return res.status(400).json({ message: "Invalid channel ID" });
+    }
+
+    const videos = await Video.find({ user_id: channelId })
+      .populate("user_id", "channelName logoUrl subscribers")
+      .sort({ createdAt: -1 });
+
+    if (!videos.length) {
+      return res
+        .status(404)
+        .json({ message: "No videos found for this channel" });
+    }
+
     res.status(200).json({ videos });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ message: "Error fetching video" });
+    console.error(error);
+    res.status(500).json({ message: "Error fetching videos" });
   }
 });
 
