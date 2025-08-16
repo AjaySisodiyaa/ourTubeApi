@@ -138,8 +138,9 @@ Router.put("/unsubscribe/:userBId", checkAuth, async (req, res) => {
 });
 
 // Update Channel
-Router.put("/:userId", checkAuth, async (req, res) => {
+Router.post("/:userId", checkAuth, async (req, res) => {
   try {
+    console.log(req.headers.authorization.split(" ")[1]);
     const verifiedUser = await jwt.verify(
       req.headers.authorization.split(" ")[1],
       process.env.SECRET_KEY
@@ -150,27 +151,41 @@ Router.put("/:userId", checkAuth, async (req, res) => {
         .status(400)
         .json({ error: "You are not authorized to update this channel" });
     }
-    const passwordValidate = await bcrypt.compare(
-      req.body.oldpassword,
-      user.password
-    );
-    if (!passwordValidate) {
-      return res.status(400).json({ error: "Invalid Password" });
+    if (req.body.password) {
+      const passwordValidate = await bcrypt.compare(
+        req.body.oldpassword,
+        user.password
+      );
+      if (!passwordValidate) {
+        return res.status(400).json({ error: "Invalid Password" });
+      }
+      const possword = await bcrypt.hash(req.body.password, 10);
+      user.password = possword;
+      await user.save();
     }
-    const possword = await bcrypt.hash(req.body.password, 10);
-    user.password = possword;
+    if (req.files.logo) {
+      cloudinary.uploader.destroy(user.logoId);
+      const uploadedImage = await cloudinary.uploader.upload(
+        req.files.logo.tempFilePath
+      );
+      user.logoId = uploadedImage.public_id;
+      user.logoUrl = uploadedImage.secure_url;
 
-    cloudinary.uploader.destroy(user.logoId);
-    const uploadedImage = await cloudinary.uploader.upload(
-      req.files.logo.tempFilePath
-    );
-    user.channelName = req.body.channelName;
-    user.email = req.body.email;
-    user.phone = req.body.phone;
-    user.logoId = uploadedImage.public_id;
-    user.logoUrl = uploadedImage.secure_url;
+      await user.save();
+    }
 
-    await user.save();
+    if (req.body.channelName) {
+      user.channelName = req.body.channelName;
+      await user.save();
+    }
+    if (req.body.email) {
+      user.email = req.body.email;
+      await user.save();
+    }
+    if (req.body.phone) {
+      user.phone = req.body.phone;
+      await user.save();
+    }
     res.status(200).json({ msg: "Channel Updated", user });
   } catch (error) {
     console.log(error);
