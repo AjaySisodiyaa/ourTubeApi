@@ -137,6 +137,47 @@ Router.put("/unsubscribe/:userBId", checkAuth, async (req, res) => {
   }
 });
 
+// Update Channel
+Router.put("/:userId", checkAuth, async (req, res) => {
+  try {
+    const verifiedUser = await jwt.verify(
+      req.headers.authorization.split(" ")[1],
+      process.env.SECRET_KEY
+    );
+    const user = await User.findById(req.params.userId);
+    if (user._id != verifiedUser._id) {
+      return res
+        .status(400)
+        .json({ error: "You are not authorized to update this channel" });
+    }
+    const passwordValidate = await bcrypt.compare(
+      req.body.oldpassword,
+      user.password
+    );
+    if (!passwordValidate) {
+      return res.status(400).json({ error: "Invalid Password" });
+    }
+    const possword = await bcrypt.hash(req.body.password, 10);
+    user.password = possword;
+
+    cloudinary.uploader.destroy(user.logoId);
+    const uploadedImage = await cloudinary.uploader.upload(
+      req.files.logo.tempFilePath
+    );
+    user.channelName = req.body.channelName;
+    user.email = req.body.email;
+    user.phone = req.body.phone;
+    user.logoId = uploadedImage.public_id;
+    user.logoUrl = uploadedImage.secure_url;
+
+    await user.save();
+    res.status(200).json({ msg: "Channel Updated", user });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
 //get user by id ------------------------------
 Router.get("/:userId", async (req, res) => {
   try {
