@@ -140,7 +140,6 @@ Router.put("/unsubscribe/:userBId", checkAuth, async (req, res) => {
 // Update Channel
 Router.post("/:userId", checkAuth, async (req, res) => {
   try {
-    console.log(req.headers.authorization.split(" ")[1]);
     const verifiedUser = await jwt.verify(
       req.headers.authorization.split(" ")[1],
       process.env.SECRET_KEY
@@ -148,7 +147,7 @@ Router.post("/:userId", checkAuth, async (req, res) => {
     const user = await User.findById(req.params.userId);
     if (user._id != verifiedUser._id) {
       return res
-        .status(400)
+        .status(401)
         .json({ error: "You are not authorized to update this channel" });
     }
     if (req.body.password) {
@@ -163,7 +162,7 @@ Router.post("/:userId", checkAuth, async (req, res) => {
       user.password = possword;
       await user.save();
     }
-    if (req.files.logo) {
+    if (req?.files) {
       cloudinary.uploader.destroy(user.logoId);
       const uploadedImage = await cloudinary.uploader.upload(
         req.files.logo.tempFilePath
