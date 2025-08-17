@@ -12,20 +12,29 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-//get all videos  ------------------------------
-Router.get("/videos", async (req, res) => {
+// get all videos with pagination ------------------------------
+Router.get("/video", async (req, res) => {
   try {
-    const videos = await Video.find({}).populate(
-      "user_id",
-      "channelName logoUrl subscribers"
-    );
-    res.status(200).json({ videos });
+    const page = parseInt(req.query.page) || 1; // default page = 1
+    const limit = parseInt(req.query.limit) || 4; // default limit = 20
+    const skip = (page - 1) * limit;
+
+    const videos = await Video.find({})
+      .populate("user_id", "channelName logoUrl subscribers")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }); // latest videos first
+
+    const total = await Video.countDocuments(); // total videos in DB
+    const hasMore = page * limit < total; // check if more pages exist
+
+    res.status(200).json({ videos, hasMore });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error fetching video" });
+    res.status(500).json({ message: "Error fetching videos" });
   }
 });
+
 //get video by Id ------------------------------
 Router.get("/video/:videoId", async (req, res) => {
   try {
