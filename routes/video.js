@@ -24,11 +24,11 @@ Router.get("/video", async (req, res) => {
       .skip(skip)
       .limit(limit);
 
-    const shuffled = [...videos];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
+    // const shuffled = [...videos];
+    // for (let i = shuffled.length - 1; i > 0; i--) {
+    //   const j = Math.floor(Math.random() * (i + 1));
+    //   [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    // }
 
     const total = await Video.countDocuments(); // total videos in DB
     const hasMore = page * limit < total; // check if more pages exist
