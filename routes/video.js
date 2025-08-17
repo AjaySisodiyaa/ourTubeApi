@@ -22,13 +22,18 @@ Router.get("/video", async (req, res) => {
     const videos = await Video.find({})
       .populate("user_id", "channelName logoUrl subscribers")
       .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 }); // latest videos first
+      .limit(limit);
+
+    const shuffled = [...videos];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
 
     const total = await Video.countDocuments(); // total videos in DB
     const hasMore = page * limit < total; // check if more pages exist
 
-    res.status(200).json({ videos, hasMore });
+    res.status(200).json({ videos: shuffled, hasMore });
   } catch (error) {
     console.log(error);
     res.status(500).json({ message: "Error fetching videos" });
