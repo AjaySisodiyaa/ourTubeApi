@@ -21,6 +21,7 @@ Router.get("/video", async (req, res) => {
 
     const videos = await Video.find({})
       .populate("user_id", "channelName logoUrl subscribers")
+      .sort({ createdAt: -1 }) // newest videos first
       .skip(skip)
       .limit(limit);
 
