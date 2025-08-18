@@ -161,10 +161,16 @@ Router.post("/upload", checkAuth, async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
     const user = await jwt.verify(token, process.env.SECRET_KEY);
-    const uploadedVideo = await cloudinary.uploader.upload(
-      req.files.video.tempFilePath,
-      { resource_type: "video" }
-    );
+    const compressedUrl = cloudinary.url(req.files.video.tempFilePath, {
+      resource_type: "video",
+      transformation: [
+        { quality: "auto" }, // auto optimize quality
+        { fetch_format: "mp4" }, // force mp4
+      ],
+    });
+    const uploadedVideo = await cloudinary.uploader.upload(compressedUrl, {
+      resource_type: "video",
+    });
     const uploadedThumbnail = await cloudinary.uploader.upload(
       req.files.thumbnail.tempFilePath
     );

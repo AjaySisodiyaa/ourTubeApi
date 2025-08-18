@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const userRoute = require("./routes/user.js");
 const videoRoute = require("./routes/video.js");
 const commentRoute = require("./routes/comment.js");
+const playlistRoute = require("./routes/playlist.js");
 
 const bodyParser = require("body-parser");
 const fileUpload = require("express-fileupload");
@@ -32,5 +33,6 @@ app.use(bodyParser.json());
 app.use("/user", userRoute);
 app.use("/video", videoRoute);
 app.use("/comment", commentRoute);
+app.use("/playlist", playlistRoute);
 
 module.exports = app;

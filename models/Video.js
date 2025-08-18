@@ -61,12 +61,6 @@ const videoSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    // viewedBy: [
-    //   {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: "User",
-    //   },
-    // ],
   },
   {
     timestamps: true,
