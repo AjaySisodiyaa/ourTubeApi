@@ -46,6 +46,17 @@ Router.get("/:playlistId", async (req, res) => {
     });
   }
 });
+Router.get("/", async (req, res) => {
+  try {
+    const playlist = await PlayList.find({}).populate("video_id");
+    res.status(200).json(playlist);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      error,
+    });
+  }
+});
 
 //add video to playlist ----------------
 Router.post("/add-video/:playlistId", checkAuth, async (req, res) => {
