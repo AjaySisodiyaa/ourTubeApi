@@ -154,18 +154,20 @@ Router.get("/channel/:channelId", async (req, res) => {
     res.status(500).json({ message: "Error fetching videos" });
   }
 });
+
+//upload video
 Router.post("/upload", checkAuth, async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
     const user = await jwt.verify(token, process.env.SECRET_KEY);
 
-    const uploadedVideo = await cloudinary.uploader.upload_large(
+    const uploadedVideo = await cloudinary.uploader.upload(
       req.files.video.tempFilePath,
       {
         resource_type: "video",
-        chunk_size: 6000000,
-        folder: "myfolder",
-        transformation: [{ quality: "auto" }, { fetch_format: "mp4" }],
+        //   chunk_size: 6000000,
+        // folder: "myfolder",
+        // eager: [{ quality: "auto" }, { fetch_format: "mp4" }],
       }
     );
 
@@ -184,7 +186,7 @@ Router.post("/upload", checkAuth, async (req, res) => {
       thumbnailUrl: uploadedThumbnail.secure_url,
       thumbnailId: uploadedThumbnail.public_id,
       category: req.body.category,
-      tags: req.body.tags.split(","),
+      tags: req.body.tags ? req.body.tags.split(",") : [],
     });
 
     const newUploadedVideoData = await newVideo.save();
@@ -225,7 +227,6 @@ Router.post("/:videoId", checkAuth, async (req, res) => {
         );
         res.status(200).json({ updatedVideo: updatedVideoDetails });
       } else {
-        console.log(req.body.tags);
         const updateData = {
           title: req.body.title,
           description: req.body.description,

@@ -26,7 +26,8 @@ app.use(express.json());
 app.use(
   fileUpload({
     useTempFiles: true,
-    // tempFileDir: "/tmp/",
+    tempFileDir: "/tmp/", // <– ensures a temp path exists
+    createParentPath: true,
   })
 );
 app.use(bodyParser.json());
