@@ -35,19 +35,9 @@ Router.post("/:videoId", checkAuth, async (req, res) => {
 //Get playlist by id ----------------
 Router.get("/:playlistId", async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1; // default page = 1
-    const limit = parseInt(req.query.limit) || 4; // default limit = 20
-    const skip = (page - 1) * limit;
     const playlist = await PlayList.findById({
       _id: req.params.playlistId,
-    })
-      .populate("video_id", "title _id thumbnailUrl")
-      .sort({ createdAt: -1 }) // newest videos first
-      .skip(skip)
-      .limit(limit);
-
-    const total = await Video.countDocuments(); // total videos in DB
-    const hasMore = page * limit < total; // check if more pages exist
+    }).populate("video_id", "title _id thumbnailUrl");
 
     res.status(200).json(playlist);
   } catch (error) {
@@ -57,12 +47,22 @@ Router.get("/:playlistId", async (req, res) => {
     });
   }
 });
+
+//Get all playlist ----------------
 Router.get("/", async (req, res) => {
   try {
-    const playlist = await PlayList.find({}).populate(
-      "video_id user_id",
-      "channelName logoUrl videoUrl thumbnailUrl"
-    );
+    const page = parseInt(req.query.page) || 1; // default page = 1
+    const limit = parseInt(req.query.limit) || 4; // default limit = 20
+    const skip = (page - 1) * limit;
+
+    const playlist = await PlayList.find({})
+      .populate("video_id user_id", "channelName logoUrl videoUrl thumbnailUrl")
+      .sort({ createdAt: -1 }) // newest videos first
+      .skip(skip)
+      .limit(limit);
+    const total = await Video.countDocuments(); // total videos in DB
+    const hasMore = page * limit < total; // check if more pages exist
+
     res.status(200).json(playlist);
   } catch (error) {
     console.log(error);
