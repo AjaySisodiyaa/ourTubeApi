@@ -60,7 +60,7 @@ Router.get("/", async (req, res) => {
       .sort({ createdAt: -1 }) // newest videos first
       .skip(skip)
       .limit(limit);
-    const total = await Video.countDocuments(); // total videos in DB
+    const total = await PlayList.countDocuments(); // total videos in DB
     const hasMore = page * limit < total; // check if more pages exist
 
     res.status(200).json(playlist);
@@ -111,6 +111,9 @@ Router.post("/add-video/:playlistId", checkAuth, async (req, res) => {
 //remove video to playlist ----------------
 Router.post("/remove-video/:playlistId", checkAuth, async (req, res) => {
   try {
+    if (!req.body.video_id) {
+      return res.status(400).json({ error: "Video id is required" });
+    }
     const verifiedUser = await jwt.verify(
       req.headers.authorization.split(" ")[1],
       process.env.SECRET_KEY
