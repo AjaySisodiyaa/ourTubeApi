@@ -48,6 +48,36 @@ Router.get("/:playlistId", async (req, res) => {
     });
   }
 });
+//Get playlist by videoId ----------------
+Router.get("/video/:videoId", async (req, res) => {
+  // res.send("hello");
+  try {
+    const page = parseInt(req.query.page) || 1; // default page = 1
+    const limit = parseInt(req.query.limit) || 4; // default limit = 20
+    const skip = (page - 1) * limit;
+    const playlist = await PlayList.find({
+      video_id: {
+        $in: [req.params.videoId],
+      },
+    })
+      .populate("video_id", "title _id thumbnailUrl videoUrl")
+      .sort({ createdAt: 1 })
+      .skip(skip)
+      .limit(limit);
+    const total = await PlayList.countDocuments({
+      video_id: {
+        $in: [req.params.videoId],
+      },
+    }); // total videos in DB
+    const hasMore = page * limit < total; // check if more pages exist
+    res.status(200).json(playlist);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      error,
+    });
+  }
+});
 
 //Get all playlist ----------------
 Router.get("/", async (req, res) => {
