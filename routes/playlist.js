@@ -61,7 +61,7 @@ Router.get("/", async (req, res) => {
         "video_id user_id",
         "channelName logoUrl videoUrl thumbnailUrl title"
       )
-      .sort({ createdAt: -1 }) // newest videos first
+      .sort({ updatedAt: -1 }) // newest videos first
       .skip(skip)
       .limit(limit);
     const total = await PlayList.countDocuments(); // total videos in DB
