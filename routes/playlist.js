@@ -59,7 +59,7 @@ Router.get("/", async (req, res) => {
     const playlist = await PlayList.find({})
       .populate(
         "video_id user_id",
-        "channelName logoUrl videoUrl thumbnailUr title"
+        "channelName logoUrl videoUrl thumbnailUrl title"
       )
       .sort({ createdAt: -1 }) // newest videos first
       .skip(skip)
