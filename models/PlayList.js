@@ -7,7 +7,9 @@ const playListSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    video_id: [{ type: mongoose.Schema.Types.ObjectId, ref: "Video" }],
+    video_id: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Video", default: [] },
+    ],
     title: {
       type: String,
       required: true,

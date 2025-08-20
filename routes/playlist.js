@@ -7,10 +7,13 @@ const mongoose = require("mongoose");
 const { Types } = require("mongoose");
 
 //Create a new playlist ----------------
-Router.post("/:videoId", checkAuth, async (req, res) => {
+Router.post("/create", checkAuth, async (req, res) => {
   try {
     if (!req.body.title) {
       return res.status(400).json({ error: "Playlist title is required" });
+    }
+    if (!req.headers.authorization) {
+      return res.status(401).json({ error: "No token provided" });
     }
     const verifiedUser = jwt.verify(
       req.headers.authorization.split(" ")[1],
@@ -19,16 +22,14 @@ Router.post("/:videoId", checkAuth, async (req, res) => {
     const newPlayList = new PlayList({
       _id: new mongoose.Types.ObjectId(),
       user_id: verifiedUser._id,
-      video_id: [req.params.videoId],
+
       title: req.body.title,
     });
     const playList = await newPlayList.save();
     res.status(200).json({ playList });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      error,
-    });
+    console.error("Error creating playlist:", error.message);
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -56,7 +57,10 @@ Router.get("/", async (req, res) => {
     const skip = (page - 1) * limit;
 
     const playlist = await PlayList.find({})
-      .populate("video_id user_id", "channelName logoUrl videoUrl thumbnailUrl")
+      .populate(
+        "video_id user_id",
+        "channelName logoUrl videoUrl thumbnailUr title"
+      )
       .sort({ createdAt: -1 }) // newest videos first
       .skip(skip)
       .limit(limit);
@@ -87,9 +91,7 @@ Router.post("/add-video/:playlistId", checkAuth, async (req, res) => {
         .status(400)
         .json({ error: "You are not authorized to update this playlist." });
     }
-    if (req.body.title) {
-      playlist.title = req.body.title;
-    }
+
     if (req.body.video_id) {
       if (playlist.video_id.includes(req.body.video_id)) {
         return res
