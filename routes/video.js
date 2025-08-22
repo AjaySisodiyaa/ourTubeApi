@@ -15,26 +15,48 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-// get video url ------------------------------
+// POST /get-video-url
 Router.post("/get-video-url", async (req, res) => {
-  try {
-    const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
-    const page = await browser.newPage();
-    await page.goto(req.body.videoUrl, { waitUntil: "networkidle2" });
+  const { videoUrl } = req.body;
 
-    const videoUrl = await page.$eval("#player", (el) =>
-      el.innerHTML.slice(94, 121)
+  if (!videoUrl) {
+    return res.status(400).json({ error: "videoUrl is required" });
+  }
+
+  let browser;
+
+  try {
+    // Launch Puppeteer
+    browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      headless: true,
+    });
+
+    const page = await browser.newPage();
+
+    // Set User-Agent to mimic a real browser
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
     );
 
+    // Go to the URL
+    await page.goto(videoUrl, { waitUntil: "networkidle2" });
+
+    // Extract #player HTML
+    const playerHtml = await page.$eval("#player", (el) => el.innerHTML);
+
+    // Adjust slice if needed
+    const videoExtractedUrl = playerHtml.slice(94, 121);
+
     await browser.close();
-    res.json({ videoUrl });
-  } catch (err) {
-    console.log(err.message);
-    res.status(500).json({ error: err.message });
+
+    res.json({ videoUrl: videoExtractedUrl });
+  } catch (error) {
+    if (browser) await browser.close();
+    console.error(error.message);
+    res.status(500).json({ error: error.message });
   }
 });
-
 // get all videos with pagination ------------------------------
 Router.get("/video", async (req, res) => {
   try {
