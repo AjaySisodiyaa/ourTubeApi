@@ -8,6 +8,7 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const { load } = require("cheerio");
+const puppeteer = require("puppeteer");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -18,20 +19,18 @@ cloudinary.config({
 // get video url ------------------------------
 Router.post("/get-video-url", async (req, res) => {
   try {
-    const { data } = await axios.get(req.body.videoUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
-    const $ = load(data);
-    const player = $("#player");
-    const videoUrl = player.length ? player.html().slice(94, 121) : null;
+    const browser = await puppeteer.launch({ args: ["--no-sandbox"] });
+    const page = await browser.newPage();
+    await page.goto(req.body.videoUrl, { waitUntil: "networkidle2" });
+
+    const videoUrl = await page.$eval("#player", (el) =>
+      el.innerHTML.slice(94, 121)
+    );
+
+    await browser.close();
     res.json({ videoUrl });
   } catch (err) {
+    console.log(err.message);
     res.status(500).json({ error: err.message });
   }
 });
