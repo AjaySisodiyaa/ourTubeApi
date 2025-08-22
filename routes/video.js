@@ -17,31 +17,45 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
 Router.post("/get-video-url", async (req, res) => {
   try {
     const videoPageUrl = req.body.videoUrl;
+    if (!videoPageUrl) {
+      return res.status(400).json({ error: "videoUrl is required" });
+    }
 
+    // Launch Puppeteer using chromium for serverless-friendly environment
     const browser = await puppeteer.launch({
-      headless: false, // try false for debugging
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
     });
+
     const page = await browser.newPage();
+
+    // Optional: set a realistic User-Agent to avoid bot detection
     await page.setUserAgent(
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
     );
-    await page.goto(videoPageUrl, { waitUntil: "networkidle2" });
-    await page.waitForSelector("#player", { timeout: 20000 }); // wait max 10s
 
-    const playerElement = await page.$("#player");
-    const videoUrl = playerElement
-      ? await page.$eval("#player", (el) => el.innerHTML.slice(94, 121))
-      : null;
+    await page.goto(videoPageUrl, { waitUntil: "networkidle2" });
+
+    // Wait for #player to appear (adjust timeout if needed)
+    await page.waitForSelector("#player", { timeout: 10000 });
+
+    // Extract player HTML
+    const playerHTML = await page.$eval("#player", (el) => el.innerHTML);
+
+    // Example: slice to extract video URL (adjust if needed)
+    const videoUrl = playerHTML ? playerHTML.slice(94, 121) : null;
+
+    await browser.close();
 
     if (!videoUrl) {
-      throw new Error("Player element not found or video URL missing");
+      return res.status(404).json({ error: "Video URL not found" });
     }
-    await browser.close();
+
     res.json({ videoUrl });
   } catch (err) {
     console.error(err);
