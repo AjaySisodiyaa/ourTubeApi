@@ -177,15 +177,15 @@ Router.post("/upload", checkAuth, async (req, res) => {
     const token = req.headers.authorization.split(" ")[1];
     const user = await jwt.verify(token, process.env.SECRET_KEY);
 
-    const uploadedVideo = await cloudinary.uploader.upload(
-      req.files.video.tempFilePath,
-      {
-        resource_type: "video",
-        //   chunk_size: 6000000,
-        // folder: "myfolder",
-        // eager: [{ quality: "auto" }, { fetch_format: "mp4" }],
-      }
-    );
+    // const uploadedVideo = await cloudinary.uploader.upload(
+    //   req.files.video.tempFilePath,
+    //   {
+    //     resource_type: "video",
+    //     //   chunk_size: 6000000,
+    //     // folder: "myfolder",
+    //     // eager: [{ quality: "auto" }, { fetch_format: "mp4" }],
+    //   }
+    // );
 
     const uploadedThumbnail = await cloudinary.uploader.upload(
       req.files.thumbnail.tempFilePath,
@@ -197,8 +197,8 @@ Router.post("/upload", checkAuth, async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       user_id: user._id,
-      videoUrl: uploadedVideo.secure_url,
-      videoId: uploadedVideo.public_id,
+      videoUrl: req.body.video,
+      // videoId: uploadedVideo.public_id,
       thumbnailUrl: uploadedThumbnail.secure_url,
       thumbnailId: uploadedThumbnail.public_id,
       category: req.body.category,
