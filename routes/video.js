@@ -176,7 +176,9 @@ Router.post("/upload", checkAuth, async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
     const user = await jwt.verify(token, process.env.SECRET_KEY);
-
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     // const uploadedVideo = await cloudinary.uploader.upload(
     //   req.files.video.tempFilePath,
     //   {
