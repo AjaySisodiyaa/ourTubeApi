@@ -6,12 +6,28 @@ const cloudinary = require("cloudinary").v2;
 const Video = require("../models/Video");
 const User = require("../models/User");
 const mongoose = require("mongoose");
+const axios = require("axios");
+const { load } = require("cheerio");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+// get video url ------------------------------
+Router.post("/get-video-url", async (req, res) => {
+  try {
+    const { data } = await axios.get(req.body.videoUrl);
+    const $ = load(data);
+    const player = $("#player");
+    const videoUrl = player.length ? player.html().slice(94, 121) : null;
+    res.json({ videoUrl });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // get all videos with pagination ------------------------------
 Router.get("/video", async (req, res) => {
   try {
