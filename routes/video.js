@@ -22,18 +22,25 @@ Router.post("/get-video-url", async (req, res) => {
     const videoPageUrl = req.body.videoUrl;
 
     const browser = await puppeteer.launch({
+      headless: false, // try false for debugging
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
     });
-
     const page = await browser.newPage();
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"
+    );
     await page.goto(videoPageUrl, { waitUntil: "networkidle2" });
+    await page.waitForSelector("#player", { timeout: 20000 }); // wait max 10s
 
-    const playerHTML = await page.$eval("#player", (el) => el.innerHTML);
-    const videoUrl = playerHTML ? playerHTML.slice(94, 121) : null;
+    const playerElement = await page.$("#player");
+    const videoUrl = playerElement
+      ? await page.$eval("#player", (el) => el.innerHTML.slice(94, 121))
+      : null;
 
+    if (!videoUrl) {
+      throw new Error("Player element not found or video URL missing");
+    }
     await browser.close();
     res.json({ videoUrl });
   } catch (err) {
