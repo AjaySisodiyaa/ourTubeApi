@@ -22,8 +22,6 @@ Router.post("/get-video-url", async (req, res) => {
 
     const browser = await puppeteer.launch({
       headless: true,
-      executablePath:
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome", // your system Chrome path
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
