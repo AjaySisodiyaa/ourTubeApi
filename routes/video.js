@@ -8,27 +8,29 @@ const User = require("../models/User");
 const mongoose = require("mongoose");
 const axios = require("axios");
 const { load } = require("cheerio");
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-core");
+const chromePaths = require("chrome-paths");
+const chromium = require("@sparticuz/chromium");
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
 Router.post("/get-video-url", async (req, res) => {
   try {
     const videoPageUrl = req.body.videoUrl;
 
     const browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
     });
 
     const page = await browser.newPage();
     await page.goto(videoPageUrl, { waitUntil: "networkidle2" });
 
-    // Extract the player HTML
     const playerHTML = await page.$eval("#player", (el) => el.innerHTML);
     const videoUrl = playerHTML ? playerHTML.slice(94, 121) : null;
 
@@ -39,6 +41,7 @@ Router.post("/get-video-url", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 // get all videos with pagination ------------------------------
 Router.get("/video", async (req, res) => {
   try {
